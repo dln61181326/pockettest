@@ -1,0 +1,5 @@
+{
+    // 1是开启，0是关闭
+    "state":0,
+    "mapurl":"https://tableau.watsonsvip.com.cn/Tableau/WEB/Tableau/FloorplanDashboard.aspx"
+}
