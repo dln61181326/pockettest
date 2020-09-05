@@ -371,7 +371,7 @@
       },
       toShortage() {
         let result = this.MultipleChoiceStateList.find((value, index, arr) => {
-                  return value.channelCode == "TM_SM"
+                  return value.allowOutStockPick == true
                 })
                 if(result){
                   this.havetmalorder = true
@@ -1487,15 +1487,15 @@
       showprint(printstate, autoprint, orderItem) {
         let takecode=""
         let takenum=orderItem.orderNo.substr(orderItem.orderNo.length-4)
-
-        let distributor = orderItem.orderType == 'CNC' ? '门店速提' : orderItem.orderType == 'CND' ? '闪电送' : '同城配'
+        
+        let distributor = orderItem.orderFrom == 'DBD' ? '调拨单':orderItem.orderItem.orderType == 'CNC' ? '门店速提' : orderItem.orderItem.orderType == 'CND' ? '闪电送' : '同城配'
         distributor = `屈臣氏${distributor}订单`
+        if(orderItem.orderItem.allowOutStockPick&&orderItem.orderFrom != 'DBD'){
+          distributor = ""
+        }
         let msg
         let phone = orderItem.shipMobile
         let shipName = orderItem.shipName
-        if(orderItem.allowOutStockPick){
-          distributor = ""
-        }
         if (shipName) {
           let i = 0
           shipName = shipName.substr(0, 1)
@@ -1518,6 +1518,7 @@
                 "printcontent": "取货码",
                 "fontSize": 2,
               },
+              
               {
                 "printtype": 1,
                 "x": 380,
@@ -1527,7 +1528,7 @@
               },
               {
                 "printtype": 1,
-                "x": 520,
+                "x": 450,
                 "y": 118,
                 "printcontent": orderItem.allowOutStockPick? takenum :orderItem.gotCode,
                 "fontSize": 6,
@@ -1655,7 +1656,7 @@
                 "printtype": 1,
                 "x": 370,
                 "y": 248,
-                "printcontent": store.state.storeNum,
+                "printcontent": this.$store.state.storeNum,
                 "fontSize": 2,
                 "rotate": 0,
                 "bold": 0,
@@ -1677,11 +1678,11 @@
                 "printtype": 1,
                 "x": 370,
                 "y": 288,
-                "contentWidth": 100,
-              "contentHeight": 200,
                 "printcontent": orderItem.expressName,
                 "fontSize": 2,
                 "rotate": 0,
+                "contentWidth": 100,
+              "contentHeight": 200,
                 "bold": 0,
                 "reverse": false,
                 "underline": false
@@ -1699,7 +1700,7 @@
               },
               {
                 "printtype": 1,
-                "x":600,
+                "x": 600,
                 "y": 248,
                 "printcontent": phone,
                 "fontSize": 2,
@@ -1739,7 +1740,7 @@
           }
 
 
-          if(orderItem.allowOutStockPick){
+          if(orderItem.allowOutStockPick&&orderItem.orderFrom != 'DBD'){
             msg.data.push( 
               {
                 "printtype": 1,
@@ -2099,7 +2100,7 @@
                 "printtype": 1,
                 "x": 750,
                 "y": 510 + 60,
-                "printcontent": orderItem.allowOutStockPick?"":"金额",
+                "printcontent":  orderItem.allowOutStockPick?"":"金额",
                 "fontSize": 2,
                 "rotate": 0,
                 "bold": 1,
@@ -2166,6 +2167,7 @@
             ]
           }
 
+
           if(orderItem.version>0){
             msg.data.push( {
                 "printtype": 1,
@@ -2179,9 +2181,9 @@
                 "underline": false
               },)
           }
-
-          if(orderItem.allowOutStockPick){
-            msg.data.push(  {
+          if(orderItem.allowOutStockPick&&this.orderFrom!="DBD"){
+            msg.data.push( 
+              {
                 "printtype": 1,
                 "x": 380,
                 "y": 148,
@@ -2198,7 +2200,8 @@
                 "bold": 1,
                 "reverse": false,
                 "underline": false
-              },{
+              },
+            {
                 "printtype": 1,
                 "x": 430,
                 "y": 460,
@@ -2264,6 +2267,8 @@
 
           let s = 0;
           for (let a = 0; a < orderItem.orderItem.length; a++) {
+            console.log('orderItem.orderItem[a].itemName----',orderItem.orderItem[a].itemName)
+
             let orderQty = orderItem.orderItem[a].orderQty
             let actualPrice = new Number(orderItem.orderItem[a].actualPrice)
             let singleAmount = Number(orderItem.orderItem[a].orderQty) * Number(orderItem.orderItem[a]
@@ -2332,7 +2337,7 @@
               "printtype": 1,
               "x": 35 + 80 + 120 - 30,
               "y": h * a + 510 + 60 + 50,
-              "contentWidth": 280,
+              "contentWidth": 280+ (orderItem.orderItem.allowOutStockPick ? 100:0),
               "contentHeight": 900,
               "printcontent": orderItem.orderItem[a].itemName,
               "fontSize": 2,
@@ -2342,8 +2347,8 @@
               "underline": false
             }, {
               "printtype": 1,
-              "x": 35 + 80 + 120 + 350 - 10 + singlealignnum,
-              "y": h * a + 510 + 60 + 50,
+              "x": orderItem.orderItem.allowOutStockPick? 0 :35 + 80 + 120 + 350 - 10 + singlealignnum,
+              "y": orderItem.orderItem.allowOutStockPick? 0 :h * a + 510 + 60 + 50,
               "printcontent": orderItem.allowOutStockPick? "": new Number(orderItem.orderItem[a].actualPrice).toFixed(2),
               "fontSize": 2,
               "rotate": 0,
@@ -2354,8 +2359,7 @@
               "printtype": 1,
               "x": 35 + 80 + 120 + 380 + 70 - 10,
               "y": h * a + 510 + 60 + 50,
-              // this.pickinglist[a].orderQty= this.pickinglist[a].pickupQty>=0? this.pickinglist[a].pickupQty :this.pickinglist[a].orderQty
-              "printcontent": orderItem.orderItem[a].afterQty,
+              "printcontent": orderItem.orderItem[a].afterQty>=0?orderItem.orderItem[a].afterQty:orderItem.orderItem[a].orderQty ,
               "fontSize": 2,
               "rotate": 0,
               "bold": 0,
@@ -2383,7 +2387,11 @@
             qrcode = 6
             changecode = 6
 
-          }  else if (orderItem.orderFrom == "京东") {
+          } else if (orderItem.orderFrom.startsWith("DBD")) {
+            qrcode = 7
+            changecode = 7
+
+          } else if (orderItem.orderFrom == "京东") {
             qrcode = 2
             changecode = 2
           } else if (orderItem.orderFrom == "京东到家") {
@@ -2403,8 +2411,9 @@
           }
 
 
-          
-          if(changecode!=6){
+          if(changecode==7){
+
+        }else if(changecode!=6){
             msg.data.push({
             "printtype": 1,
             "x": 200,

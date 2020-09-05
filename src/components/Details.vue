@@ -268,7 +268,8 @@
         notalldisplay :'notalldisplay',
          notallundisplay:'notallundisplay',
          mapstate:false,
-          mapurl:""
+          mapurl:"",
+          longgotcode:false
       }
     },
 
@@ -354,7 +355,7 @@
       },
       showprint(printstate, autoprint) {
         let takecode=this.orderItem.orderNo.substr(this.orderItem.orderNo.length-4)
-      
+        this.longgotcode = this.orderFrom=="IST"? true:false
         let msg
         let phone = this.orderItem.shipMobile
         let distributor = this.orderFrom == 'IST' ? '调拨单':this.orderItem.orderType == 'CNC' ? '门店速提' : this.orderItem.orderType == 'CND' ? '闪电送' : '同城配'
@@ -639,7 +640,7 @@
                 "x": 520,
                 "y": 118,
                 "printcontent": this.orderItem.gotCode,
-                "fontSize": 6,
+                "fontSize": this.orderItem.allowOutStockPick? 1:6,
                 "rotate": 0,
                 "bold": 1,
                 "reverse": false,
@@ -716,7 +717,7 @@
                 "printtype": 1,
                 "x": 450,
                 "y": 118,
-                "printcontent": this.orderItem.allowOutStockPick? takecode:this.orderItem.gotCode,
+                "printcontent": (this.orderItem.allowOutStockPick&&!this.longgotcode)? takecode:this.orderItem.gotCode,
                 "fontSize": 6,
                 "rotate": 0,
                 "bold": 1,
@@ -1200,7 +1201,7 @@
               "printtype": 1,
               "x": 35 + 80 + 120 - 30,
               "y": h * a + 510 + 60 + 50,
-              "contentWidth": 280,
+              "contentWidth": 280+ (this.orderItem.allowOutStockPick ? 100:0),
               "contentHeight": 900,
               "printcontent": this.pickinglist[a].itemName,
               "fontSize": 2,
@@ -1210,8 +1211,8 @@
               "underline": false
             }, {
               "printtype": 1,
-              "x": 35 + 80 + 120 + 350 - 10 + singlealignnum,
-              "y": h * a + 510 + 60 + 50,
+              "x": this.orderItem.allowOutStockPick? 0 : 35 + 80 + 120 + 350 - 10 + singlealignnum,
+              "y":  this.orderItem.allowOutStockPick? 0 :h * a + 510 + 60 + 50,
               "printcontent": this.orderItem.allowOutStockPick?"": new Number(this.pickinglist[a].actualPrice).toFixed(2),
               "fontSize": 2,
               "rotate": 0,

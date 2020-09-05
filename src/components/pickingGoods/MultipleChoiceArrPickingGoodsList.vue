@@ -48,6 +48,7 @@
         <div class="tipsBoxContent">确定要打印？</div>
       </div>
       <div id="content">
+        <!-- <div id="contentItem"> -->
         <div id="contentItem">
           <div id="contentItem">
             <div class="orderlistContent" v-for="(dataList,index) in sumItemList">
@@ -1140,14 +1141,14 @@ res => {
         let takecode=""
         let takenum=orderItem.orderNo.substr(orderItem.orderNo.length-4)
         
-        let distributor = orderItem.orderType == 'CNC' ? '门店速提' : orderItem.orderType == 'CND' ? '闪电送' : '同城配'
+        let distributor = orderItem.orderFrom == 'DBD' ? '调拨单':orderItem.orderItem.orderType == 'CNC' ? '门店速提' : orderItem.orderItem.orderType == 'CND' ? '闪电送' : '同城配'
         distributor = `屈臣氏${distributor}订单`
+        if(orderItem.orderItem.allowOutStockPick&&orderItem.orderFrom != 'DBD'){
+          distributor = ""
+        }
         let msg
         let phone = orderItem.shipMobile
         let shipName = orderItem.shipName
-        if(orderItem.allowOutStockPick){
-          distributor = ""
-        }
         if (shipName) {
           let i = 0
           shipName = shipName.substr(0, 1)
@@ -1392,7 +1393,7 @@ res => {
           }
 
 
-          if(orderItem.allowOutStockPick){
+          if(orderItem.allowOutStockPick&&orderItem.orderFrom != 'DBD'){
             msg.data.push( 
               {
                 "printtype": 1,
@@ -1833,7 +1834,7 @@ res => {
                 "underline": false
               },)
           }
-          if(orderItem.allowOutStockPick){
+          if(orderItem.allowOutStockPick&&orderItem.orderFrom!="DBD"){
             msg.data.push( 
               {
                 "printtype": 1,
@@ -1989,7 +1990,7 @@ res => {
               "printtype": 1,
               "x": 35 + 80 + 120 - 30,
               "y": h * a + 510 + 60 + 50,
-              "contentWidth": 280,
+              "contentWidth": 280+ (orderItem.orderItem.allowOutStockPick ? 100:0),
               "contentHeight": 900,
               "printcontent": orderItem.orderItem[a].itemName,
               "fontSize": 2,
@@ -1999,8 +2000,8 @@ res => {
               "underline": false
             }, {
               "printtype": 1,
-              "x": 35 + 80 + 120 + 350 - 10 + singlealignnum,
-              "y": h * a + 510 + 60 + 50,
+              "x": orderItem.orderItem.allowOutStockPick? 0 :35 + 80 + 120 + 350 - 10 + singlealignnum,
+              "y": orderItem.orderItem.allowOutStockPick? 0 :h * a + 510 + 60 + 50,
               "printcontent": orderItem.allowOutStockPick? "": new Number(orderItem.orderItem[a].actualPrice).toFixed(2),
               "fontSize": 2,
               "rotate": 0,
@@ -2039,7 +2040,11 @@ res => {
             qrcode = 6
             changecode = 6
 
-          }  else if (orderItem.orderFrom == "京东") {
+          } else if (orderItem.orderFrom.startsWith("DBD")) {
+            qrcode = 7
+            changecode = 7
+
+          } else if (orderItem.orderFrom == "京东") {
             qrcode = 2
             changecode = 2
           } else if (orderItem.orderFrom == "京东到家") {
@@ -2059,8 +2064,9 @@ res => {
           }
 
 
-          
-          if(changecode!=6){
+          if(changecode==7){
+
+        }else if(changecode!=6){
             msg.data.push({
             "printtype": 1,
             "x": 200,
